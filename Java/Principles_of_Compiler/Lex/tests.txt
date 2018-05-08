@@ -1,0 +1,12 @@
+int main(){
+   printf("Hello World!");
+   a++;
+   b++;
+   a&&b;
+   /**/;
+   &;
+   |;
+   2abb;
+   1 + 1 = 22;
+   return 0;
+}

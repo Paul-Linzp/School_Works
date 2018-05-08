@@ -1,0 +1,12 @@
+package test;
+
+public class TEST {
+	public static void main(String[] args) {
+		StringBuffer test = new StringBuffer("1bc");
+		if(test.toString().charAt(0) == '1') {
+			System.out.println("success");
+		}
+		System.out.println(test.toString().charAt(1));
+	}
+	
+}
