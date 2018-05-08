@@ -1,9 +1,0 @@
-package test;
-
-public class TEST {
-	public static void main(String[] args) {
-		StringBuffer test = new StringBuffer("abc");
-		System.out.println(test);
-	}
-	
-}
