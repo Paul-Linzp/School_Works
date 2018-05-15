@@ -3,6 +3,7 @@
     Stu.num : 15281266
     School : Beijing Jiaotong University
     Prof : Computer Science & Technology
+    Function : Recursive_Descent_Parsing on LL(1)
 '''
 
 '''
@@ -19,6 +20,7 @@ string = ''   #variable to store the input string
 string_counter = 0    #counter for getting the current string index
 wrong_char = ''    #signal for wrong string that store the index of wrong string
 current = ''    #variable that store the current string token 
+para_rec = 0
 #=================Recursion Code====================
 '''
     Function name : Recursive_Descent_Parsing
@@ -28,16 +30,19 @@ current = ''    #variable that store the current string token
 def Recursive_Descent_Parsing():
     global string
     
-    string = "(+i)#" #The input string
+    string = "i)#" #The input string
     
     result = Recursion('E') #E is the starting charactor of the languange, the function will return whether the string is true of false
     
-    if result == 1:
+    if result == 1 and current == '#':
         print ("This is a right string!\n")
     else:
-        if string[wrong_char] == '#':
+        if result == 1 and current != '#':
+            wrong_char = string.index(current)
             print("Unexpected end of string near '" + string[:wrong_char] + "' please check your input!")
-        if string[wrong_char] in VOL['T']:
+        elif string[wrong_char] == '#':
+            print("Unexpected end of string near '" + string[:wrong_char] + "' please check your input!")
+        elif string[wrong_char] in VOL['T']:
              print("Syntax Error near '" + string[:wrong_char] +"' please check your input!")
         else:
             print("Invalid charactor near '" + string[:wrong_char] +"' please check your input!")
@@ -66,6 +71,8 @@ def Recursion(NONE_ENDING):
                         if token in VOL['T'] and current == token: #If the Vt in the candidate is equal to present current then advance
                             Advance()
                             continue
+                        if token in VOL['T'] and current != token:
+                            return 0
                         if Recursion(token) == 1: #If the current is the Vn then go Recursion
                             continue
                         elif Recursion(token) == 0 and waiting != GRAMMA[NONE_ENDING][-1]: #If false continue if the current candidate is not the last one
@@ -74,7 +81,7 @@ def Recursion(NONE_ENDING):
                             #print("Syntax Error! Unreadable charactor '" + current +"' please check your input!\n")
                             wrong_char = string.index(current)
                             return 0
-                return 1
+                #return 1
         elif current in FOLLOW[NONE_ENDING] and 'e' in GRAMMA[NONE_ENDING]: #'e' is epsino, the rule with this can return true if the current isn't in the FIRST set
             return 1
         else:
