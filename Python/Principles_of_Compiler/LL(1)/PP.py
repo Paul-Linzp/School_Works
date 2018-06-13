@@ -22,7 +22,7 @@ def Predication_Parsing():
     global pop
     global anna_stack
     global string_counter
-    string = '(i+i#'
+    string = '(i+i)#'
     anna_stack.push('#')
     result = Predication('E')
     if result == 1:
@@ -54,7 +54,7 @@ def Predication(CANDI):
             if anna_stack.peek() in VOL['T']:
                 if anna_stack.peek() == current:
                     string_counter = string_counter + 1
-                    print (anna_stack.disp())
+                    #print (anna_stack.disp())
                     anna_stack.pop()
                     current = string[string_counter]
                     if current not in VOL['T']:

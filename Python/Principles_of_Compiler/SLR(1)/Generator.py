@@ -1,4 +1,4 @@
-from Gramma import GRAMMA, VOL
+from Gramma2 import GRAMMA, VOL
 from copy import deepcopy
 
 class Generator:

@@ -29,8 +29,7 @@ para_rec = 0
 '''
 def Recursive_Descent_Parsing():
     global string
-    
-    string = "i)#" #The input string
+    string = "i+i#" #The input string
     
     result = Recursion('E') #E is the starting charactor of the languange, the function will return whether the string is true of false
     
@@ -75,13 +74,15 @@ def Recursion(NONE_ENDING):
                             return 0
                         if Recursion(token) == 1: #If the current is the Vn then go Recursion
                             continue
-                        elif Recursion(token) == 0 and waiting != GRAMMA[NONE_ENDING][-1]: #If false continue if the current candidate is not the last one
-                            continue
+                        elif Recursion(token) == 0: #If false continue if the current candidate is not the last one
+                            if GRAMMA[NONE_ENDING][-1] == '|':
+                                if waiting != GRAMMA[NONE_ENDING][-2]:
+                                    continue
                         else:
                             #print("Syntax Error! Unreadable charactor '" + current +"' please check your input!\n")
                             wrong_char = string.index(current)
                             return 0
-                #return 1
+                return 1
         elif current in FOLLOW[NONE_ENDING] and 'e' in GRAMMA[NONE_ENDING]: #'e' is epsino, the rule with this can return true if the current isn't in the FIRST set
             return 1
         else:
