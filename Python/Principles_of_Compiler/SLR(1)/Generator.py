@@ -4,12 +4,44 @@ from copy import deepcopy
 class Generator:
     def __init__(self, GRAMMA, VOL):
         self.GRAMMA = GRAMMA
+        self.GRAMMA_NEW = {}
         self.VOL = VOL
         self.leftpart = GRAMMA.keys()
         self.first = {not_end : [] for not_end in self.leftpart}
         self.follow = {not_end : [] for not_end in self.leftpart}
         self.first_first = set()
         self.real_not_end = ''
+
+    def Free_Left_Recursive(self):
+        alpha = []
+        beyta = []
+        for lefter in self.GRAMMA.keys():
+            alpha = []
+            beyta = []
+            for right in self.GRAMMA[lefter]:
+                if right == '|':
+                    continue
+                if right[0] == lefter:
+                    alpha.append([right[1:]])
+                    for right2 in self.GRAMMA[lefter]:
+                        if right2 == '|':
+                            continue
+                        if right2[0] != lefter and right2 not in beyta:
+                            beyta.append([right2])
+            if alpha == beyta == []:
+                self.GRAMMA_NEW.setdefault(lefter, self.GRAMMA[lefter])
+            else:
+                lefter2 = lefter + '_'
+                for atom in beyta:
+                    atom.append(lefter2)
+                    atom.append('|')
+                self.GRAMMA_NEW.setdefault(lefter, beyta)
+                for atom in alpha:
+                    atom.append(lefter2)
+                    atom.append('|')
+                atom.append('e')
+                self.GRAMMA_NEW.setdefault(lefter2, alpha)
+        self.GRAMMA = self.GRAMMA_NEW
 
     def Find_First(self, not_end):
         not_search_flag = 0
@@ -83,6 +115,7 @@ class Generator:
 
 if __name__ == '__main__':
     test = Generator(GRAMMA, VOL)
+    test.Free_Left_Recursive()
     test.First_Gene()
 
     print("FIRST")

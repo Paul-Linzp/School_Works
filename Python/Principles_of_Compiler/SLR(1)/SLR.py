@@ -7,6 +7,7 @@ class SLR:
         self.GRAMMA = GRAMMA
         self.VOL = VOL
         self.Generator = Generator(self.GRAMMA, self.VOL)
+        self.Generator.Free_Left_Recursive()
         self.Producer = []
         self.Projects = []
         self.C = [] * 100
@@ -14,6 +15,10 @@ class SLR:
         self.Extand_Seq = ['E_', ['E']]
         #self.Extand_Seq = ['S_', ['S']]
         self.Has_Deri = 0
+        self.Generator.First_Gene()
+        self.FIRST = self.Generator.first
+        self.Generator.Follow_Gene()
+        self.FOLLOW = self.Generator.follow
         self.ACTION = {status : { not_end : {} for not_end in self.VOL['T'] } for status in range(0, 1)}
         self.GOTO = {status : { not_end : {} for not_end in self.VOL['N'] } for status in range(0, 1)}
         
@@ -144,6 +149,8 @@ class SLR:
                                 self.ACTION[j]['#'] = 'acc'
                                 continue
                             for Deri in self.VOL['T']:
+                                if Deri not in self.FOLLOW[sub_item[0]]:
+                                    continue
                                 if self.ACTION[j][Deri] != {}:
                                     self.ACTION[j][Deri] = str(self.ACTION[j][Deri]) + ',' + recursive
                                     continue
