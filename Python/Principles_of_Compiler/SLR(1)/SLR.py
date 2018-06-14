@@ -10,14 +10,15 @@ class SLR:
         self.Producer = []
         self.Projects = []
         self.C = [] * 100
-        #self.Extand_Seq = ['E_', ['E']]
-        self.Extand_Seq = ['S_', ['S']]
+        self.ensure = 0
+        self.Extand_Seq = ['E_', ['E']]
+        #self.Extand_Seq = ['S_', ['S']]
         self.Has_Deri = 0
         self.ACTION = {status : { not_end : {} for not_end in self.VOL['T'] } for status in range(0, 1)}
         self.GOTO = {status : { not_end : {} for not_end in self.VOL['N'] } for status in range(0, 1)}
         
     def Create_Producer_Sequence(self):
-        #self.Producer.append(self.Extand_Seq)
+        self.Producer.append(self.Extand_Seq)
         for key in self.GRAMMA.items():
             for right in self.GRAMMA[key[0]]:
                 if right != '|':
@@ -51,22 +52,23 @@ class SLR:
     def GO(self, C, Deri, pos):
         flag = 0
         for c in C:
-            if Deri in c[1][c[1].index('@') + 1]:
-                flag2 = 0
-                for c2 in self.C:
-                    if self.Projects[self.Projects.index(c) + 1] in c2:
-                        if Deri in self.VOL['T']:        
-                            self.ACTION[self.Has_Deri][Deri] = self.C.index(c2)
-                        flag2 = 1
-                        break
-                if flag2 == 1:
-                    continue    
-                self.C[pos].append(self.Projects[self.Projects.index(c) + 1])
-                if Deri in self.VOL['N']:
-                    self.GOTO[self.Has_Deri][Deri] = pos
-                if Deri in self.VOL['T']:        
-                    self.ACTION[self.Has_Deri][Deri] = pos
-                flag = 1
+            if c[1][-1] != '@':
+                if Deri in c[1][c[1].index('@') + 1]:
+                    flag2 = 0
+                    for c2 in self.C:
+                        if self.Projects[self.Projects.index(c) + 1] in c2:
+                            if Deri in self.VOL['T']:        
+                                self.ACTION[self.Has_Deri][Deri] = self.C.index(c2)
+                            flag2 = 1
+                            break
+                    if flag2 == 1:
+                        continue    
+                    self.C[pos].append(self.Projects[self.Projects.index(c) + 1])
+                    if Deri in self.VOL['N']:
+                        self.GOTO[self.Has_Deri][Deri] = pos
+                    if Deri in self.VOL['T']:        
+                        self.ACTION[self.Has_Deri][Deri] = pos
+                    flag = 1
         if pos != self.C.index(self.C[pos]):
             self.C[pos] = []
         if flag == 1:
@@ -82,6 +84,7 @@ class SLR:
     def Closure(self, i):
         Derivation_Sequence = self.Is_Derivation(i)
         if len(Derivation_Sequence) != 0:
+            self.Has_Deri = i
             for deri in Derivation_Sequence:
                 for proj in self.Projects:
                     if deri in proj and proj[1][0] == '@' and proj not in self.C[i]:
@@ -89,6 +92,7 @@ class SLR:
 
     def Create_C_Sequence(self):
         i = 0
+        ensure = 0
         temp = 0
         Derivation_Sequence = []
         self.C.append([self.Projects[0]])
@@ -117,7 +121,12 @@ class SLR:
                         for proj in self.Projects:
                             if deri in proj and proj[1][0] == '@' and proj not in self.C[i]:
                                 self.C[i].append(proj)
-                if old_C == self.C:
+                if old_C == self.C :
+                    if ensure == 0:
+                        ensure = 1
+                        continue
+                    else:
+                        ensure = 0
                     break
 #            for temp in self.C[i]:
 #                print(temp)
@@ -125,16 +134,20 @@ class SLR:
             if old_C_all == self.C and self.C.index(self.C[-1]) == i:
                 del self.C[-1]
                 for item, j in zip(self.C, range(0, len(self.C))):
-                    if item[0][1][-1] == '@':
-                        producer = deepcopy(item)
-                        producer[0][1] = producer[0][1][:-1]
-                        recursive = 'r' + str(self.Producer.index(producer[0]))
-                        #if item[0][1][0] == 'E':
-                        if item[0][1][-2] == '#':
-                            self.ACTION[j]['#'] = 'acc'
-                            continue
-                        for Deri in self.VOL['T']:
-                            self.ACTION[j][Deri] = recursive
+                    for sub_item in item:
+                        if sub_item[1][-1] == '@':
+                            producer = deepcopy(sub_item)
+                            producer[1] = producer[1][:-1]
+                            recursive = 'r' + str(self.Producer.index(producer))
+                            if sub_item[1][0] == 'E':
+                            #if item[0][1][-2] == '#':
+                                self.ACTION[j]['#'] = 'acc'
+                                continue
+                            for Deri in self.VOL['T']:
+                                if self.ACTION[j][Deri] != {}:
+                                    self.ACTION[j][Deri] = str(self.ACTION[j][Deri]) + ',' + recursive
+                                    continue
+                                self.ACTION[j][Deri] = recursive
                 break
 
     def GOTO_ADD(self, status):
