@@ -10,13 +10,14 @@ class SLR:
         self.Producer = []
         self.Projects = []
         self.C = [] * 100
-        self.Extand_Seq = ['E_', ['E']]
+        #self.Extand_Seq = ['E_', ['E']]
+        self.Extand_Seq = ['S_', ['S']]
         self.Has_Deri = 0
         self.ACTION = {status : { not_end : {} for not_end in self.VOL['T'] } for status in range(0, 1)}
         self.GOTO = {status : { not_end : {} for not_end in self.VOL['N'] } for status in range(0, 1)}
         
     def Create_Producer_Sequence(self):
-        self.Producer.append(self.Extand_Seq)
+        #self.Producer.append(self.Extand_Seq)
         for key in self.GRAMMA.items():
             for right in self.GRAMMA[key[0]]:
                 if right != '|':
@@ -78,6 +79,14 @@ class SLR:
             else:
                 return False
 
+    def Closure(self, i):
+        Derivation_Sequence = self.Is_Derivation(i)
+        if len(Derivation_Sequence) != 0:
+            for deri in Derivation_Sequence:
+                for proj in self.Projects:
+                    if deri in proj and proj[1][0] == '@' and proj not in self.C[i]:
+                        self.C[i].append(proj)
+
     def Create_C_Sequence(self):
         i = 0
         temp = 0
@@ -95,6 +104,7 @@ class SLR:
                     temp = self.C.index(self.C[-1])
                     for Deri in Derivation_Sequence:
                         is_append = self.GO(self.C[self.Has_Deri], Deri, temp)
+                        self.Closure(temp)
                         if is_append == 1:
                             self.C.append([])
                             self.GOTO_ADD(temp)
@@ -119,7 +129,8 @@ class SLR:
                         producer = deepcopy(item)
                         producer[0][1] = producer[0][1][:-1]
                         recursive = 'r' + str(self.Producer.index(producer[0]))
-                        if item[0][1][0] == 'E':
+                        #if item[0][1][0] == 'E':
+                        if item[0][1][-2] == '#':
                             self.ACTION[j]['#'] = 'acc'
                             continue
                         for Deri in self.VOL['T']:
