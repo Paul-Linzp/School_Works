@@ -11,6 +11,7 @@ class Compiler():
         self.sign_test_cont = 0
         self.strToken = ''
         self.signToken = ''
+        self.is_anno = 0
         self.retainWord = ["int","if","else","return","main","void","while","break"]
         self.letterSign = ["++","--",">>","<<","+=","-=","*=","/=","&&","||","/*","*/"]
 
@@ -20,7 +21,7 @@ class Compiler():
         return False
 
     def Reserve(self):
-        if self.Error_Report_Str() == 1:
+        if self.is_anno == 0 and self.Error_Report_Str() == 1:
             return 4
         for i in range(0, len(self.retainWord)):
             if self.strToken == self.retainWord[i]:
@@ -32,17 +33,24 @@ class Compiler():
 
     def Retract(self):
         self.code = self.Reserve()
-        if self.code == 1:
-            print("(" + " 1, " + "' " + self.strToken + " ')")
-        elif self.code == 2:
-            print("(" + " 2, " + "' " + self.strToken + " ')")
-        elif self.code == 3:
-            print("(" + " 3, " + "' " + self.strToken + " ')")
-        self.strToken = ''
+        if self.strToken != '' and self.is_anno == 0:
+            if self.code == 1:
+                print("(" + " 1, " + "' " + self.strToken + " ')")
+            elif self.code == 2:
+                print("(" + " 2, " + "' " + self.strToken + " ')")
+            elif self.code == 3:
+                print("(" + " 3, " + "' " + self.strToken + " ')")
+            self.strToken = ''
     
     def LetterSign(self):
         for i in range(0, len(self.letterSign)):
             if self.signToken == self.letterSign[i]:
+                if self.signToken == '/*':
+                    self.is_anno = 1
+                if self.signToken == '*/':
+                    self.is_anno = 0
+                    print("(" + " 3, " + "' " + self.signToken + " ')")
+                    self.strToken = ''
                 self.flag = 3
                 return 1
         self.sign_test_cont = self.sign_test_cont + 1
@@ -84,14 +92,14 @@ class Compiler():
                         self.strToken = self.strToken + ch
                     elif ch.isdigit() == True:
                         self.strToken = self.strToken + ch
-                    elif ch == '=':
+                    elif ch == '=' and self.is_anno == 0:
                         if len(self.strToken) != 0 and self.strToken[0] == '=':
                             self.strToken = self.strToken + ch
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.strToken = ''
                         else:
                             self.strToken = self.strToken + ch
-                    elif ch == '+':
+                    elif ch == '+' and self.is_anno == 0:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -106,10 +114,10 @@ class Compiler():
                         self.Retract_Sign()
                         self.signal = 1
                         self.flag2 = 0
-                        if self.flag == 1:
+                        if self.flag == 1 and self.is_anno == 0 and self.is_anno == 0:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                    elif ch == '/':
+                    elif ch == '/' and self.is_anno == 1:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -118,31 +126,7 @@ class Compiler():
                         if self.flag == 1:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                    elif ch == ';':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == '(':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == ')':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == '{':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == '}':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == ',':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == '!':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == '"':
-                        self.Retract()
-                        print("(" + " 5, " + "' " + ch + " ')")
-                    elif ch == '<':
+                    elif ch == '/' and self.is_anno == 0:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -151,7 +135,31 @@ class Compiler():
                         if self.flag == 1:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                    elif ch == '>':
+                    elif ch == ';' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == '(' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == ')' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == '{' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == '}' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == ',' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == '!' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == '"' and self.is_anno == 0:
+                        self.Retract()
+                        print("(" + " 5, " + "' " + ch + " ')")
+                    elif ch == '<' and self.is_anno == 0:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -160,7 +168,7 @@ class Compiler():
                         if self.flag == 1:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                    elif ch == '|':
+                    elif ch == '>' and self.is_anno == 0:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -169,7 +177,7 @@ class Compiler():
                         if self.flag == 1:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                    elif ch == '/':
+                    elif ch == '|' and self.is_anno == 0:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -178,7 +186,7 @@ class Compiler():
                         if self.flag == 1:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                    elif ch == '&':
+                    elif ch == '/' and self.is_anno == 0:
                         self.Retract()
                         self.signToken = self.signToken + ch
                         self.Retract_Sign()
@@ -187,10 +195,19 @@ class Compiler():
                         if self.flag == 1:
                             print("(" + " 4, " + "' " + ch + " ')")
                             self.flag = 0
-                else:
+                    elif ch == '&' and self.is_anno == 0:
+                        self.Retract()
+                        self.signToken = self.signToken + ch
+                        self.Retract_Sign()
+                        self.signal = 1
+                        self.flag2 = 0
+                        if self.flag == 1:
+                            print("(" + " 4, " + "' " + ch + " ')")
+                            self.flag = 0
+                elif self.is_anno == 0:
                     self.Retract()
                 self.flag2 = self.flag2 + 1
-                if self.flag2 == 2 and self.signal == 1 and self.flag != 1 and len(self.signToken) != 0:
+                if self.flag2 == 2 and self.signal == 1 and self.flag != 1 and len(self.signToken) != 0 and self.is_anno == 0:
                     temp2 = self.Error_Report_Sign()
                     if temp2 == 0:
                         continue

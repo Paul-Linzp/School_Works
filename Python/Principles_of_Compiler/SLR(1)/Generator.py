@@ -1,14 +1,15 @@
 from Gramma2 import GRAMMA, VOL
 from copy import deepcopy
+from collections import OrderedDict
 
 class Generator:
     def __init__(self, GRAMMA, VOL):
-        self.GRAMMA = GRAMMA
-        self.GRAMMA_NEW = {}
-        self.VOL = VOL
+        self.GRAMMA = deepcopy(GRAMMA)
+        self.GRAMMA_NEW = OrderedDict()
+        self.VOL = deepcopy(VOL)
         self.leftpart = GRAMMA.keys()
-        self.first = {not_end : [] for not_end in self.leftpart}
-        self.follow = {not_end : [] for not_end in self.leftpart}
+        self.first = {}  # = {not_end : [] for not_end in self.leftpart}
+        self.follow = {}  # = {not_end : [] for not_end in self.leftpart}
         self.first_first = set()
         self.real_not_end = ''
 
@@ -22,26 +23,38 @@ class Generator:
                 if right == '|':
                     continue
                 if right[0] == lefter:
-                    alpha.append([right[1:]])
+                    alpha.append(right[1:])
+                    alpha.append('|')
                     for right2 in self.GRAMMA[lefter]:
                         if right2 == '|':
                             continue
-                        if right2[0] != lefter and right2 not in beyta:
+                        if right2[0] != lefter and [right2] not in beyta:
                             beyta.append([right2])
+                            beyta.append('|')
             if alpha == beyta == []:
-                self.GRAMMA_NEW.setdefault(lefter, self.GRAMMA[lefter])
+                self.GRAMMA_NEW[lefter] = self.GRAMMA[lefter]
             else:
                 lefter2 = lefter + '_'
+                self.VOL['N'].append(lefter2)
                 for atom in beyta:
+                    if atom == '|':
+                        continue
+                    if isinstance(atom[0], list):
+                        atom[0].append(lefter2)
+                        continue
                     atom.append(lefter2)
-                    atom.append('|')
-                self.GRAMMA_NEW.setdefault(lefter, beyta)
+                self.GRAMMA_NEW[lefter] = beyta
                 for atom in alpha:
+                    if atom == '|':
+                        continue
+                    if isinstance(atom[0], list):
+                        atom[0].append(lefter2)
+                        continue
                     atom.append(lefter2)
-                    atom.append('|')
-                atom.append('e')
-                self.GRAMMA_NEW.setdefault(lefter2, alpha)
+                alpha.append('e')
+                self.GRAMMA_NEW[lefter2] = alpha
         self.GRAMMA = self.GRAMMA_NEW
+        self.leftpart = self.GRAMMA.keys()
 
     def Find_First(self, not_end):
         not_search_flag = 0
@@ -57,6 +70,7 @@ class Generator:
                 not_search_flag = 0
 
     def First_Gene(self):
+        self.first = {not_end : [] for not_end in self.leftpart}
         while True:
             old_first = deepcopy(self.first)
             for not_end in self.leftpart:
@@ -88,7 +102,8 @@ class Generator:
                         self.follow[dir].append(element)
 
     def Follow_Gene(self):
-        self.follow['E'].append('#')
+        self.follow = {not_end : [] for not_end in self.leftpart}
+        self.follow[list(self.GRAMMA)[0]].append('#')
         while True:
             old_follow = deepcopy(self.follow)
             for test_not_end in self.leftpart:

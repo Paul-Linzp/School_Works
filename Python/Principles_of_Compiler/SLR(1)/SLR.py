@@ -6,19 +6,21 @@ class SLR:
     def __init__(self, GRAMMA, VOL):
         self.GRAMMA = GRAMMA
         self.VOL = VOL
-        self.Generator = Generator(self.GRAMMA, self.VOL)
-        self.Generator.Free_Left_Recursive()
+        #self.Generator = Generator(GRAMMA, VOL)
+        #self.Generator.Free_Left_Recursive()
         self.Producer = []
         self.Projects = []
         self.C = [] * 100
         self.ensure = 0
-        self.Extand_Seq = ['E_', ['E']]
+        self.Extand_Seq = [list(self.GRAMMA)[0] + '_', [list(self.GRAMMA)[0]]]
+        #self.Extand_Seq = ['E_', ['E']]
         #self.Extand_Seq = ['S_', ['S']]
         self.Has_Deri = 0
-        self.Generator.First_Gene()
-        self.FIRST = self.Generator.first
-        self.Generator.Follow_Gene()
-        self.FOLLOW = self.Generator.follow
+        #self.Generator.First_Gene()
+        #self.FIRST = self.Generator.first
+        #self.Generator.Follow_Gene()
+        #self.FOLLOW = self.Generator.follow
+        self.FOLLOW = { left : [] for left in self.GRAMMA.keys()}
         self.ACTION = {status : { not_end : {} for not_end in self.VOL['T'] } for status in range(0, 1)}
         self.GOTO = {status : { not_end : {} for not_end in self.VOL['N'] } for status in range(0, 1)}
         
@@ -47,7 +49,7 @@ class SLR:
         Derivation_Sequence = []
         for proj in self.C[pos]:
             if proj[1][-1] == '@':
-                break
+                continue
             if proj[1][proj[1].index('@') + 1] in list(set(self.VOL['N'])^set(self.VOL['T'])):
                 if proj[1][proj[1].index('@') + 1] in Derivation_Sequence:
                     continue
@@ -89,7 +91,7 @@ class SLR:
     def Closure(self, i):
         Derivation_Sequence = self.Is_Derivation(i)
         if len(Derivation_Sequence) != 0:
-            self.Has_Deri = i
+            #self.Has_Deri = i
             for deri in Derivation_Sequence:
                 for proj in self.Projects:
                     if deri in proj and proj[1][0] == '@' and proj not in self.C[i]:
@@ -144,7 +146,7 @@ class SLR:
                             producer = deepcopy(sub_item)
                             producer[1] = producer[1][:-1]
                             recursive = 'r' + str(self.Producer.index(producer))
-                            if sub_item[1][0] == 'E':
+                            if sub_item[1][0] == list(self.GRAMMA)[0]:
                             #if item[0][1][-2] == '#':
                                 self.ACTION[j]['#'] = 'acc'
                                 continue
@@ -163,11 +165,26 @@ class SLR:
     def ACTION_ADD(self, status):
         self.ACTION[status] = { not_end : {} for not_end in self.VOL['T'] }
 
+    def CREATE_FOLLOW(self):
+        self.FOLLOW[list(self.GRAMMA)[0]].append('#')
+        for key in self.GRAMMA.keys():
+            for key2 in self.GRAMMA.keys():
+                for right in self.GRAMMA[key2]:
+                    if key in right:
+                        if key == right[-1]:
+                            for foll in self.FOLLOW[key2]:
+                                if foll not in self.FOLLOW[key]:
+                                    self.FOLLOW[key].append(foll)
+                            continue
+                        if right[right.index(key) + 1] in self.VOL['T']:
+                            self.FOLLOW[key].append(right[right.index(key) + 1])
+
     def Form_Display(self):
         print("nothing")
 
 if __name__ == '__main__':
     test = SLR(GRAMMA, VOL)
+    test.CREATE_FOLLOW()
     test.Create_Producer_Sequence()
     test.Create_Project_Sequence()
     test.Create_C_Sequence()

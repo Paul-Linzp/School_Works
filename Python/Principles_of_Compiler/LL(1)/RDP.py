@@ -29,14 +29,17 @@ para_rec = 0
 '''
 def Recursive_Descent_Parsing():
     global string
-    string = "i+i#" #The input string
+    global wrong_char
+    string = "(i+i)#" #The input string
     
     result = Recursion('E') #E is the starting charactor of the languange, the function will return whether the string is true of false
     
     if result == 1 and current == '#':
         print ("This is a right string!\n")
     else:
-        if result == 1 and current != '#':
+        if wrong_char == 0:
+            print("Unexpected start of string." + " please check your input!")
+        elif result == 1 and current != '#':
             wrong_char = string.index(current)
             print("Unexpected end of string near '" + string[:wrong_char] + "' please check your input!")
         elif string[wrong_char] == '#':
@@ -71,13 +74,18 @@ def Recursion(NONE_ENDING):
                             Advance()
                             continue
                         if token in VOL['T'] and current != token:
+                            wrong_char = string.index(current)
                             return 0
                         if Recursion(token) == 1: #If the current is the Vn then go Recursion
                             continue
                         elif Recursion(token) == 0: #If false continue if the current candidate is not the last one
+                            '''
                             if GRAMMA[NONE_ENDING][-1] == '|':
                                 if waiting != GRAMMA[NONE_ENDING][-2]:
                                     continue
+                            '''
+                            wrong_char = string.index(current)
+                            return 0
                         else:
                             #print("Syntax Error! Unreadable charactor '" + current +"' please check your input!\n")
                             wrong_char = string.index(current)
@@ -86,6 +94,7 @@ def Recursion(NONE_ENDING):
         elif current in FOLLOW[NONE_ENDING] and 'e' in GRAMMA[NONE_ENDING]: #'e' is epsino, the rule with this can return true if the current isn't in the FIRST set
             return 1
         else:
+            wrong_char = string.index(current)
             return 0
     else:
         current = string[string_counter]
