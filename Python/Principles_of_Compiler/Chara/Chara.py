@@ -15,67 +15,67 @@ class OPGAnalyzer:
 
     # 生成firstvt集
     def get_firstvt(self):
-        self.firstvt = {nontermainal: set() for nontermainal in self.nonterminals}
+        self.firstvt = {non_end: set() for non_end in self.nonterminals}
         stack = []
         # 根据规则1，遍历产生式
-        for nontermainal in self.nonterminals:
-            for right in self.productions[nontermainal]:
+        for non_end in self.nonterminals:
+            for right in self.productions[non_end]:
                 # 若有规则U→b…或规则U→Vb…，将b加入U的firstvt集中，同时将元组(U, b)入栈
                 if right[0] in self.overs:
-                    self.firstvt[nontermainal].add(right[0])
-                    stack.append((nontermainal, right[0]))
+                    self.firstvt[non_end].add(right[0])
+                    stack.append((non_end, right[0]))
                 if len(right) > 1 and right[1] in self.overs and right[0] in self.nonterminals:
-                    self.firstvt[nontermainal].add(right[1])
-                    stack.append((nontermainal, right[1]))
+                    self.firstvt[non_end].add(right[1])
+                    stack.append((non_end, right[1]))
         # 根据规则2，反复遍历产生式直到栈为空
         while len(stack) > 0:
             V, b = stack.pop()
-            for nontermainal in self.nonterminals:
-                for right in self.productions[nontermainal]:
+            for non_end in self.nonterminals:
+                for right in self.productions[non_end]:
                     # 对每一个形如U→V…的规则
                     if V == right[0]:
                         # 如果b不在U的firstvt集中，将b加入U的firstvt集中，同时将元组(U, b)入栈
-                        if b not in self.firstvt[nontermainal]:
-                            self.firstvt[nontermainal].add(b)
-                            stack.append((nontermainal, b))
+                        if b not in self.firstvt[non_end]:
+                            self.firstvt[non_end].add(b)
+                            stack.append((non_end, b))
         if self.log_level:
             print(self.firstvt)
 
     # 生成lastvt集
     def get_lastvt(self):
-        self.lastvt = {nontermainal: set() for nontermainal in self.nonterminals}
+        self.lastvt = {non_end: set() for non_end in self.nonterminals}
         stack = []
         # 根据规则1，遍历产生式
-        for nontermainal in self.nonterminals:
-            for right in self.productions[nontermainal]:
+        for non_end in self.nonterminals:
+            for right in self.productions[non_end]:
                 # 若有规则U→…a或规则U→…aV，将a加入U的lastvt集中，同时将元组(U, a)入栈
-                if right[-1] in overs:
-                    self.lastvt[nontermainal].add(right[-1])
-                    stack.append((nontermainal, right[-1]))
+                if right[-1] in VOL:
+                    self.lastvt[non_end].add(right[-1])
+                    stack.append((non_end, right[-1]))
                 if len(right) > 1 and right[-2] in self.overs and right[-1] in self.nonterminals:
-                    self.lastvt[nontermainal].add(right[-2])
-                    stack.append((nontermainal, right[-2]))
+                    self.lastvt[non_end].add(right[-2])
+                    stack.append((non_end, right[-2]))
         # 根据规则2，反复遍历产生式直到栈为空
         while len(stack) > 0:
             V, a = stack.pop()
-            for nontermainal in self.nonterminals:
-                for right in self.productions[nontermainal]:
+            for non_end in self.nonterminals:
+                for right in self.productions[non_end]:
                     # 对每一个形如U→…V的规则
                     if V == right[-1]:
                         # 如果a不在U的lastvt集中，将a加入U的firstvt集中，同时将元组(U, a)入栈
-                        if a not in self.lastvt[nontermainal]:
-                            self.lastvt[nontermainal].add(a)
-                            stack.append((nontermainal, a))
+                        if a not in self.lastvt[non_end]:
+                            self.lastvt[non_end].add(a)
+                            stack.append((non_end, a))
         if self.log_level:
             print(self.lastvt)
 
     # 生成优先矩阵
     def get_relation_matrix(self):
         # 1为大于，0为等于，-1为小于
-        self.relation_matrix = pd.DataFrame(index=overs, columns=overs)
+        self.relation_matrix = pd.DataFrame(index=VOL, columns=VOL)
         # 对于每一条规则
-        for nontermainal in self.nonterminals:
-            for right in self.productions[nontermainal]:
+        for non_end in self.nonterminals:
+            for right in self.productions[non_end]:
                 # 对于产生式右部的每一个非末尾符号
                 for i, a in enumerate(right[:-1]):
                     # 如果是终结符
@@ -103,8 +103,8 @@ class OPGAnalyzer:
 
     # 判断string是否不是任何一个产生式的右部
     def is_not_right(self, string):
-        for nontermainal in self.nonterminals:
-            for right in self.productions[nontermainal]:
+        for non_end in self.nonterminals:
+            for right in self.productions[non_end]:
                 tag = True
                 # 如果string长度和right不相同，当然不是，下一个产生式
                 if len(right) != len(string):
@@ -202,17 +202,17 @@ class OPGAnalyzer:
 
 
 # S和N不可以作为非终结符，为测试算法健壮性，加入文法'E→E--'
-productions = {
+GRAMMA = {
     'E': ['E+T', 'T', 'E-T', 'E--'],
     'T': ['T*F', 'F', 'T/F'],
     'F': ['(E)', 'i'],
 }
 start = 'E'
-nonterminals = productions.keys()
+non_end = GRAMMA.keys()
 # '#'不可以作为终结符号
-overs = ['+', '*', 'i', '(', ')', '/', '-']
+VOL = ['+', '*', 'i', '(', ')', '/', '-']
 
-opg_analyzer = OPGAnalyzer(start=start, productions=productions, overs=overs, log_level=2)
+opg_analyzer = OPGAnalyzer(start=start, productions=GRAMMA, overs=VOL, log_level=1)
 # 以下测试样例中，
 # '='和'i=i*i'针对的是输入非法终结符号的情况
 # 'i++'和'(i--+i)*i'针对的是文法'E→E--'

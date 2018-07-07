@@ -23,3 +23,22 @@ class Stack:
 
     def size(self): 
         return len(self.items) 
+
+if __name__ == "__main__":
+    test = Stack()
+    print(test.isEmpty())
+    test.push(1)
+    test.push(2)
+    test.push("abc")
+    test.push("efg")
+    test.push([1, 2])
+    test.push([3, 4])
+    print(test.disp())
+    print(test.size())
+    print(test.peek())
+    print(test.pop())
+    print(test.peek())
+    print(test.pop())
+    print(test.size())
+    print(test.disp())
+    

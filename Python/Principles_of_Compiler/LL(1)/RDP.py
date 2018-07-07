@@ -20,7 +20,6 @@ string = ''   #variable to store the input string
 string_counter = 0    #counter for getting the current string index
 wrong_char = ''    #signal for wrong string that store the index of wrong string
 current = ''    #variable that store the current string token 
-para_rec = 0
 #=================Recursion Code====================
 '''
     Function name : Recursive_Descent_Parsing
@@ -30,7 +29,7 @@ para_rec = 0
 def Recursive_Descent_Parsing():
     global string
     global wrong_char
-    string = "(i+i)#" #The input string
+    string = "i+#" #The input string
     
     result = Recursion('E') #E is the starting charactor of the languange, the function will return whether the string is true of false
     

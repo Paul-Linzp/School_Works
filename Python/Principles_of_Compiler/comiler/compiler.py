@@ -459,6 +459,6 @@ import os
 
 analyzer = SLRAnalyzer(start, productions, log_level=0)
 while True:
-    file = input('Please input directory：\n')
+    file = input('Please input directory: \n')
     if not analyzer.analyse(file):
         break

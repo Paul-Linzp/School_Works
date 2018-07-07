@@ -6,18 +6,22 @@ class SLRAnalyzer:
         self.start = start
         self.new_start = new_start
         self.productions = productions
-        self.nonterminals = productions.keys()
+        self.not_end = productions.keys()
         self.log_level = log_level
+        self.temp_num = 0 #中间变量
+        self.temp_stack = []
+        self.calculate = []
+        self.first_time = 0
 
         self.overs = set()
         self.get_overs() #获取终结符号集
 
         self.jinghao = '#'
-        self.first = {nontermainal: {} for nontermainal in self.nonterminals}
-        self.follow = {nontermainal: set() for nontermainal in self.nonterminals}
-        self.get_first_follow() #获取first和follow
+        self.first = {nontermainal: {} for nontermainal in self.not_end}
+        self.follow = {nontermainal: set() for nontermainal in self.not_end}
+        self.first_follow() #获取first和follow
 
-        self.items = {key: list() for key in self.nonterminals}
+        self.items = {key: list() for key in self.not_end}
         self.point = point
         self.get_items()    #产生文法项目集
 
@@ -48,7 +52,7 @@ class SLRAnalyzer:
                     ret_dict.update({right[0]: right})
                 else:
                     for sign in right:
-                        if sign in self.nonterminals:
+                        if sign in self.not_end       :
                             first_ = self.first[sign]
                             ret_dict.update({key: right for key in first_.keys()})
                             if '' not in first_.keys():
@@ -58,19 +62,19 @@ class SLRAnalyzer:
         return ret_dict
 
     # 求first集和follow集
-    def get_first_follow(self):
+    def first_follow(self):
         # 求first第一轮，产生式右部首字符为终结符号
         self.first_first = set()
-        for nontermainal in self.nonterminals:
-            for right in self.productions[nontermainal]:
+        for not_end in self.not_end:
+            for right in self.productions[not_end]:
                 if right != '' and right[0] in self.overs:
-                    self.first[nontermainal][right[0]] = right
-                    self.first_first.add((nontermainal, right))
+                    self.first[not_end][right[0]] = right
+                    self.first_first.add((not_end, right))
         # 求first第二轮
         while True:
             old_first = deepcopy(self.first)
-            for nontermainal in self.nonterminals:
-                self.first[nontermainal].update(self.get_first(nontermainal))
+            for not_end in self.not_end:
+                self.first[not_end].update(self.get_first(not_end))
             if old_first == self.first:
                 break
         # 起始符号follow集
@@ -78,13 +82,13 @@ class SLRAnalyzer:
         # 循环直到follow集不再变化
         while True:
             old_follow = deepcopy(self.follow)
-            for nontermainal in self.nonterminals:
-                for right in self.productions[nontermainal]:
+            for not_end in self.not_end:
+                for right in self.productions[not_end]:
                     for i, sign in enumerate(right):
                         if sign in self.overs:
                             continue
                         if i == len(right) - 1:
-                            self.follow[sign] |= self.follow[nontermainal]
+                            self.follow[sign] |= self.follow[not_end]
                         elif right[i + 1] in self.overs:
                             self.follow[sign].add(right[i + 1])
                         else:
@@ -92,7 +96,7 @@ class SLRAnalyzer:
                             next_set_without_null = {key for key in self.first[right[i + 1]].keys() if key != ''}
                             self.follow[sign] |= next_set_without_null
                             if '' in next_set:
-                                self.follow[sign] |= self.follow[nontermainal]
+                                self.follow[sign] |= self.follow[not_end]
             if old_follow == self.follow:
                 break
         if self.log_level >= 2:
@@ -100,10 +104,10 @@ class SLRAnalyzer:
             pprint(self.follow)
 
     def get_overs(self):
-        for nonterminal in self.nonterminals:
+        for nonterminal in self.not_end:
             for right in self.productions[nonterminal]:
                 for sign in right:
-                    if sign not in self.nonterminals:
+                    if sign not in self.not_end:
                         self.overs.add(sign)
         if self.log_level >= 2:
             print('over sign set:')
@@ -111,7 +115,7 @@ class SLRAnalyzer:
 
     def get_items(self):
         self.items[self.new_start] = [self.point + self.start, self.start + self.point]
-        for nonterminal in self.nonterminals:
+        for nonterminal in self.not_end:
             for right in self.productions[nonterminal]:
                 for i in range(len(right)):
                     self.items[nonterminal].append(right[:i] + self.point + right[i:])
@@ -127,7 +131,7 @@ class SLRAnalyzer:
             i = 0
             while i < len(right) and right[i] != self.point:
                 i += 1
-            if i + 1 < len(right) and right[i + 1] in self.nonterminals:
+            if i + 1 < len(right) and right[i + 1] in self.not_end:
                 for item in self.items[right[i + 1]]:
                     if self.point == item[0]:
                         ret.add((right[i + 1], item))
@@ -169,7 +173,7 @@ class SLRAnalyzer:
                         self.analyse_table[self.index] = {self.jinghao: [self.acc, ]}
                     else:
                         production_index = 0
-                        for left_ in self.nonterminals:
+                        for left_ in self.not_end:
                             for right_ in self.productions[left_]:
                                 if (left, right.replace(self.point, '')) == (left_, right_):
                                     self.analyse_table[self.index] = {
@@ -232,12 +236,62 @@ class SLRAnalyzer:
                         jihe.add(sign)
         return ret
 
-    def analyse_lr(self, string):
+    def GEN(self, sentence, list):
+        flag = 0
+        if len(sentence) > 1 and ('(' not in sentence or ')' not in sentence):
+            for left in self.productions:    
+                if sentence in self.productions[left]:
+                    for a in list:
+                        if a[-1] in self.calculate or self.first_time == 0:
+                            if self.first_time == 0:
+                                temp = 'K' + str(self.temp_num)
+                                temp2 = 'T' + str(self.temp_num)
+                                self.temp_stack.append(temp2)
+                            else:
+                                temp = 'K' + str(self.temp_num - 1)
+                                temp2 = 'T' + str(self.temp_num - 1)
+                                self.temp_stack.append(temp2)
+                                list[list.index(a)] = temp
+                            self.first_time = 1
+                            flag = 1
+                    if '=' not in list:
+                        if ')' in list[2]:
+                            print('(' + list[1] + ', ' + self.temp_stack.pop() + ', ' + list[0][1] + ', ' + 'T' + str(self.temp_num) + ')')
+                            self.temp_stack.append('T1')
+                        elif ')' in list[0]:
+                            print('(' + list[1] + ', ' + list[2][1] + ', ' + self.temp_stack.pop() + ', ' + 'T' + str(self.temp_num) + ')')
+                            self.temp_stack.append('T1')
+                        elif 'K' in list[2] and 'K' not in list[0] and flag == 1:
+                            print('(' + list[1] + ', ' + self.temp_stack.pop() + ', ' + list[0][1] + ', ' + 'T' + str(self.temp_num) + ')')
+                        elif 'K' in list[0] and 'K' not in list[2] and flag == 1:
+                            print('(' + list[1] + ', ' + list[2][1] + ', ' + self.temp_stack.pop() + ', ' + 'T' + str(self.temp_num) + ')')
+                        elif 'K' in list[0] and 'K' in list[2] and flag == 1:
+                            self.temp_num += 1
+                            self.temp_stack.pop()
+                            print('(' + list[1] + ', ' + self.temp_stack.pop() + ', ' + self.temp_stack.pop() + ', ' + 'T' + str(self.temp_num) + ')')
+                        else:
+                            print('(' + list[1] + ', ' + list[2][1] + ', ' + list[0][1] + ', ' + 'T' + str(self.temp_num) + ')')
+                    else:
+                        if 'K' in list[2] and flag == 1:
+                            print('(' + list[1] + ', ' + list[0][1] + ', ' + '_' + ', ' + list[2] + ')')
+                        elif 'K' in list[0] and flag == 1:
+                            print('(' + list[1] + ', ' + self.temp_stack.pop() + ', ' + '_' + ', ' + list[2][1] + ')')
+
+                        else:
+                            print('(' + list[1] + ', ' + list[0][1] + ', ' + '_' + ', ' + list[2][1] + ')')
+                    for b in list:
+                        self.calculate.append(b[-1])
+            self.temp_num += 1
+
+    def analyse_lr(self, string, num):
+        global string_list1
         string += self.jinghao
         status_stack = [0, ]
         sign_stack = [self.jinghao, ]
         string_index = 0
+        str_temp = []
         while self.analyse_table[status_stack[-1]][string[string_index]][0] != self.acc:
+            str_temp = []
             if 'r' != self.analyse_table[status_stack[-1]][string[string_index]][1]:
                 if self.log_level >= 1:
                     print(status_stack, sign_stack)
@@ -251,21 +305,31 @@ class SLRAnalyzer:
                 if self.log_level >= 1:
                     print(status_stack, sign_stack, left, right)
                 for i in range(len(right)):
-                    sign_stack.pop()
+                    str_temp.append(sign_stack.pop())
                     status_stack.pop()
+                self.GEN(right, str_temp)
                 if self.log_level >= 1:
                     print(status_stack, sign_stack, left, right)
                 status_stack.append(self.analyse_table[status_stack[-1]][left][0])
-                sign_stack.append(left)
+                sign_stack.append(left + string_list1[num][string_index - 1])
                 if self.log_level >= 1:
                     print(status_stack, sign_stack, left, right)
             if string[string_index] not in self.analyse_table[status_stack[-1]].keys():
                 return 0
         return 1
 
-    def analyse(self, string):
+    def transform(self, string_list):
+        for j, string in zip(range(len(string_list)), string_list):
+            for i, char in zip(range(len(string)), string):
+                if char not in self.overs:
+                    string = string[:i] + 'i' + string[i+1:]
+                    string_list[j] = string
+        return string_list
+
+
+    def analyse(self, string, num):
         print('analysing: ' + string)
-        if self.analyse_lr(string) == 1:
+        if self.analyse_lr(string, num) == 1:
             print('ok  ', string)
         else:
             print('fail', string)
@@ -321,7 +385,13 @@ productions = {
     'F': ['(E)', 'i'],
     'V': ['i', ],
 }
-string_list = ['i=i+i', 'i=(i-i)*i/(i+i)', 'i==i*i']
+string_list1 = ['a=b+c*e/f-g','a=(b-c)*d/(e+f)', 'i==i*i']
+temp = deepcopy(string_list1)
 analyzer = SLRAnalyzer(start, productions, log_level=0)
-for string in string_list:
-    analyzer.analyse(string)
+string_list2 = analyzer.transform(temp)
+for i, string in zip(range(len(string_list2)), string_list2):
+    analyzer.analyse(string, i)
+    analyzer.temp_num = 0
+    analyzer.calculate = []
+    analyzer.temp_stack = []
+    analyzer.first_time = 0

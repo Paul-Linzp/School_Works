@@ -16,13 +16,14 @@ pop = ''
 flag_syn = 0
 flag_char = 0
 curr_stor = 0
+flag_start = 0
 
 def Predication_Parsing():
     global string
     global pop
     global anna_stack
     global string_counter
-    string = '(i+i)#'
+    string = 'i#'
     anna_stack.push('#')
     result = Predication('E')
     if result == 1:
@@ -31,6 +32,8 @@ def Predication_Parsing():
         print("Unknown charactor near '" + string[:curr_stor]  + "' Please check your string!")
     elif flag_syn == 1:
         print("Syntax error near '" + string[:curr_stor] + "' Please check your string!")
+    elif flag_start == 1:
+        print("Unexpected start of string. Please check your string!")
 
 def Predication(CANDI):
     global flag_syn
@@ -39,11 +42,13 @@ def Predication(CANDI):
     global anna_stack
     global current
     global curr_stor
+    global flag_start
     current = string[string_counter]
     while(1):
         if flag_char == 1:
             return 0
         if CANDI == 'E' and 'E' not in ANNA_TABLE[current] or flag_syn == 1:
+            flag_start = 1
             return 0
         elif anna_stack.peek() == '#' or string_counter != len(string):
             if CANDI != 'e':
@@ -94,6 +99,10 @@ def Predication(CANDI):
                         curr_stor = string.index(current)
                         flag_syn = 1
                         return 0
+                else:
+                    curr_stor = string.index(current)
+                    flag_syn = 1
+                    return 0
         else:
             return 1
                 
